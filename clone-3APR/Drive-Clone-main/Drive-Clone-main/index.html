@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SkyStore – Advanced Cloud Storage</title>
+<meta name="description" content="SkyStore: A feature-rich cloud storage system with auto-organize, insights, sharing, and more."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-bg">
+    <div class="auth-blob blob1"></div>
+    <div class="auth-blob blob2"></div>
+    <div class="auth-blob blob3"></div>
+  </div>
+  <div class="auth-card glass">
+    <div class="auth-logo"><span class="logo-icon">☁</span><span class="logo-text">SkyStore</span></div>
+    <p class="auth-tagline">Your intelligent cloud storage system</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="input-group"><span class="input-icon">👤</span><input type="text" id="login-username" placeholder="Username or Email" required/></div>
+      <div class="input-group"><span class="input-icon">🔒</span><input type="password" id="login-password" placeholder="Password" required/></div>
+      <button type="submit" class="btn-primary full-width" id="login-btn">Sign In</button>
+      <p id="login-error" class="auth-error"></p>
+    </form>
+    <!-- Register Form -->
+    <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+      <div class="input-group"><span class="input-icon">👤</span><input type="text" id="reg-username" placeholder="Username" required/></div>
+      <div class="input-group"><span class="input-icon">✉</span><input type="email" id="reg-email" placeholder="Email" required/></div>
+      <div class="input-group"><span class="input-icon">🔒</span><input type="password" id="reg-password" placeholder="Password (min 6 chars)" required/></div>
+      <button type="submit" class="btn-primary full-width" id="reg-btn">Create Account</button>
+      <p id="reg-error" class="auth-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="app" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><span class="logo-icon">☁</span><span class="logo-text">SkyStore</span></div>
+
+    <!-- Upload Button -->
+    <button class="btn-upload sidebar-upload" onclick="openUploadModal()">
+      <span>+</span> Upload Files
+    </button>
+
+    <!-- Nav Links -->
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-section="home" onclick="navigate('home')"><span class="nav-icon">🏠</span>Home</a>
+      <a class="nav-item" data-section="recent" onclick="navigate('recent')"><span class="nav-icon">🕐</span>Recent</a>
+      <a class="nav-item" data-section="starred" onclick="navigate('starred')"><span class="nav-icon">⭐</span>Starred</a>
+      <a class="nav-item" data-section="pinned" onclick="navigate('pinned')"><span class="nav-icon">📌</span>Pinned</a>
+      <a class="nav-item" data-section="folders" onclick="navigate('folders')"><span class="nav-icon">📁</span>Folders</a>
+      <a class="nav-item" data-section="images" onclick="navigate('images')"><span class="nav-icon">🖼</span>Images</a>
+      <a class="nav-item" data-section="documents" onclick="navigate('documents')"><span class="nav-icon">📄</span>Documents</a>
+      <a class="nav-item" data-section="videos" onclick="navigate('videos')"><span class="nav-icon">🎬</span>Videos</a>
+      <a class="nav-item" data-section="insights" onclick="navigate('insights')"><span class="nav-icon">📊</span>Insights</a>
+      <a class="nav-item" data-section="activity" onclick="navigate('activity')"><span class="nav-icon">📋</span>Activity</a>
+      <a class="nav-item" data-section="trash" onclick="navigate('trash')"><span class="nav-icon">🗑</span>Trash</a>
+      <a class="nav-item" data-section="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span>Settings</a>
+    </nav>
+
+    <!-- Storage Meter -->
+    <div class="storage-widget">
+      <div class="storage-label">
+        <span>Storage</span>
+        <span id="sidebar-storage-text">0 / 100 MB</span>
+      </div>
+      <div class="storage-bar"><div class="storage-fill" id="sidebar-storage-fill"></div></div>
+    </div>
+
+    <!-- User Info -->
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">U</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-username">User</div>
+        <div class="user-email" id="sidebar-email">user@mail.com</div>
+      </div>
+      <button class="btn-icon" onclick="handleLogout()" title="Logout">↩</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search files..." oninput="handleSearch(this.value)"/>
+        <select id="search-type-filter" onchange="handleSearch(document.getElementById('search-input').value)">
+          <option value="">All Types</option>
+          <option value="image">Images</option>
+          <option value="video">Videos</option>
+          <option value="audio">Audio</option>
+          <option value="pdf">PDFs</option>
+          <option value="text">Text</option>
+        </select>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-icon" onclick="toggleTheme()" id="theme-toggle" title="Toggle theme">🌙</button>
+        <button class="btn-icon" onclick="navigate('insights')" title="Insights">📊</button>
+        <div class="notif-bell" onclick="toggleNotifications()">
+          🔔<span class="notif-dot hidden" id="notif-dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Notification Banner -->
+    <div id="notif-banner" class="notif-banner hidden"></div>
+
+    <!-- Undo Bar -->
+    <div id="undo-bar" class="undo-bar hidden">
+      <span id="undo-msg">File moved to trash</span>
+      <button onclick="undoLastAction()" class="btn-undo">↩ Undo</button>
+      <button onclick="closeUndoBar()" class="undo-close">✕</button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area" id="content-area">
+
+      <!-- HOME -->
+      <section id="section-home" class="section active">
+        <div class="section-header">
+          <h1 id="home-greeting">Good morning!</h1>
+          <div class="view-controls">
+            <button class="btn-icon active-view" id="view-grid" onclick="setView('grid')" title="Grid">⊞</button>
+            <button class="btn-icon" id="view-list" onclick="setView('list')" title="List">≡</button>
+            <select id="sort-select" onchange="changeSortHome()">
+              <option value="uploaded_at-DESC">Newest First</option>
+              <option value="uploaded_at-ASC">Oldest First</option>
+              <option value="size-DESC">Largest</option>
+              <option value="original_name-ASC">Name A-Z</option>
+            </select>
+          </div>
+        </div>
+        <!-- Quick Stats -->
+        <div class="stats-row" id="quick-stats"></div>
+        <!-- Auto-organize banner -->
+        <div class="organize-banner glass" id="organize-banner">
+          <span>🤖 Smart Auto-Organizer available</span>
+          <button class="btn-sm" onclick="runAutoOrganize()">Organize Now</button>
+          <button class="btn-sm ghost" onclick="document.getElementById('organize-banner').classList.add('hidden')">Dismiss</button>
+        </div>
+        <!-- Pinned Files -->
+        <div id="pinned-section" class="sub-section hidden">
+          <h2 class="sub-title">📌 Pinned</h2>
+          <div class="files-grid" id="pinned-files-grid"></div>
+        </div>
+        <!-- All Files -->
+        <h2 class="sub-title">All Files</h2>
+        <div id="home-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- RECENT -->
+      <section id="section-recent" class="section">
+        <div class="section-header"><h1>Recent Files</h1></div>
+        <div id="recent-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- STARRED -->
+      <section id="section-starred" class="section">
+        <div class="section-header"><h1>⭐ Starred Files</h1></div>
+        <div id="starred-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- PINNED -->
+      <section id="section-pinned" class="section">
+        <div class="section-header"><h1>📌 Pinned Files</h1></div>
+        <div id="pinned-page-container" class="files-grid"></div>
+      </section>
+
+      <!-- FOLDERS -->
+      <section id="section-folders" class="section">
+        <div class="section-header">
+          <h1>📁 Folders</h1>
+          <button class="btn-primary" onclick="openCreateFolder()">+ New Folder</button>
+        </div>
+        <div id="folders-container" class="folders-grid"></div>
+        <h2 class="sub-title" id="folder-files-title" style="display:none">Files in Folder</h2>
+        <div id="folder-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- IMAGES / DOCS / VIDEOS -->
+      <section id="section-images" class="section">
+        <div class="section-header"><h1>🖼 Images</h1></div>
+        <div id="images-files-container" class="files-grid"></div>
+      </section>
+      <section id="section-documents" class="section">
+        <div class="section-header"><h1>📄 Documents</h1></div>
+        <div id="documents-files-container" class="files-grid"></div>
+      </section>
+      <section id="section-videos" class="section">
+        <div class="section-header"><h1>🎬 Videos</h1></div>
+        <div id="videos-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- INSIGHTS -->
+      <section id="section-insights" class="section">
+        <div class="section-header"><h1>📊 File Insights</h1></div>
+        <div id="insights-container"></div>
+      </section>
+
+      <!-- ACTIVITY -->
+      <section id="section-activity" class="section">
+        <div class="section-header"><h1>📋 Activity Log</h1></div>
+        <div id="activity-container"></div>
+      </section>
+
+      <!-- TRASH -->
+      <section id="section-trash" class="section">
+        <div class="section-header">
+          <h1>🗑 Trash</h1>
+          <button class="btn-danger" onclick="emptyTrash()" id="empty-trash-btn">Empty Trash</button>
+        </div>
+        <p class="trash-note">Files are automatically deleted after 30 days.</p>
+        <div id="trash-files-container" class="files-grid"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="section-settings" class="section">
+        <div class="section-header"><h1>⚙ Settings</h1></div>
+        <div id="settings-container"></div>
+      </section>
+
+      <!-- SEARCH RESULTS -->
+      <section id="section-search" class="section">
+        <div class="section-header"><h1>🔍 Search Results</h1></div>
+        <div id="search-files-container" class="files-grid"></div>
+      </section>
+
+    </div><!-- /content-area -->
+  </main>
+</div><!-- /app -->
+
+<!-- ========== MODALS ========== -->
+
+<!-- Upload Modal -->
+<div class="modal-overlay hidden" id="upload-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>Upload Files</h2>
+      <button class="modal-close" onclick="closeModal('upload-modal')">✕</button>
+    </div>
+    <div class="drop-zone" id="drop-zone"
+      ondragover="event.preventDefault();this.classList.add('dragging')"
+      ondragleave="this.classList.remove('dragging')"
+      ondrop="handleDrop(event)">
+      <div class="drop-icon">📂</div>
+      <p>Drag &amp; drop files here</p>
+      <span>or</span>
+      <label class="btn-secondary file-label">
+        Browse Files<input type="file" id="file-input" multiple hidden onchange="handleFileSelect(this)"/>
+      </label>
+    </div>
+    <div id="upload-queue" class="upload-queue"></div>
+    <div class="upload-options">
+      <label class="checkbox-label">
+        <input type="checkbox" id="auto-organize-check"/> 🤖 Auto-Organize by type
+      </label>
+      <select id="upload-folder-select">
+        <option value="">No folder (root)</option>
+      </select>
+    </div>
+    <button class="btn-primary full-width" onclick="startUpload()" id="do-upload-btn" disabled>Upload</button>
+  </div>
+</div>
+
+<!-- File Preview Modal -->
+<div class="modal-overlay hidden" id="preview-modal">
+  <div class="modal modal-large glass">
+    <div class="modal-header">
+      <h2 id="preview-title">Preview</h2>
+      <button class="modal-close" onclick="closeModal('preview-modal')">✕</button>
+    </div>
+    <div id="preview-content" class="preview-content"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="downloadCurrentFile()">⬇ Download</button>
+      <button class="btn-secondary" onclick="closeModal('preview-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay hidden" id="share-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>Share File</h2>
+      <button class="modal-close" onclick="closeModal('share-modal')">✕</button>
+    </div>
+    <div class="share-options">
+      <label>Permission:
+        <select id="share-perm"><option value="view">View Only</option><option value="download">View &amp; Download</option></select>
+      </label>
+      <label>Expires:
+        <select id="share-expiry">
+          <option value="">Never</option>
+          <option value="1">1 Hour</option>
+          <option value="24">24 Hours</option>
+          <option value="168">7 Days</option>
+        </select>
+      </label>
+    </div>
+    <button class="btn-primary full-width" onclick="generateShareLink()">Generate Link</button>
+    <div id="share-result" class="share-result hidden">
+      <input type="text" id="share-url-input" readonly/>
+      <button class="btn-secondary" onclick="copyShareUrl()">Copy</button>
+      <a id="share-public-link" href="#" target="_blank"
+         style="display:none;margin-top:.6rem;font-size:.83rem;color:var(--accent);text-decoration:underline;text-align:center"></a>
+    </div>
+  </div>
+</div>
+
+<!-- Notes Modal -->
+<div class="modal-overlay hidden" id="notes-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>📝 File Notes</h2>
+      <button class="modal-close" onclick="closeModal('notes-modal')">✕</button>
+    </div>
+    <textarea id="notes-textarea" rows="6" placeholder="Add a note to this file..."></textarea>
+    <button class="btn-primary full-width" onclick="saveNote()">Save Note</button>
+  </div>
+</div>
+
+<!-- Create Folder Modal -->
+<div class="modal-overlay hidden" id="folder-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>📁 New Folder</h2>
+      <button class="modal-close" onclick="closeModal('folder-modal')">✕</button>
+    </div>
+    <input type="text" id="folder-name-input" placeholder="Folder name" class="full-width-input"/>
+    <label class="checkbox-label">
+      <input type="checkbox" id="folder-private-check" onchange="togglePrivateFields()"/> 🔒 Private Folder (password protected)
+    </label>
+    <div id="folder-private-fields" class="hidden">
+      <input type="password" id="folder-password-input" placeholder="Set folder password" class="full-width-input"/>
+    </div>
+    <button class="btn-primary full-width" onclick="createFolder()">Create Folder</button>
+  </div>
+</div>
+
+<!-- File Context Menu -->
+<div id="ctx-menu" class="ctx-menu hidden"></div>
+
+<!-- Folder Unlock Modal -->
+<div class="modal-overlay hidden" id="unlock-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>🔒 Private Folder</h2>
+      <button class="modal-close" onclick="closeModal('unlock-modal')">✕</button>
+    </div>
+    <p>This folder is password protected.</p>
+    <input type="password" id="unlock-password" placeholder="Enter password" class="full-width-input"/>
+    <button class="btn-primary full-width" onclick="submitUnlock()">Unlock</button>
+    <p id="unlock-error" class="auth-error"></p>
+  </div>
+</div>
+
+<!-- ========== NEW MODALS ========== -->
+
+<!-- AI Summarizer Modal -->
+<div class="modal-overlay hidden" id="summarize-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>🤖 AI File Summary</h2>
+      <button class="modal-close" onclick="closeModal('summarize-modal')">✕</button>
+    </div>
+    <div id="summarize-content" style="padding:.5rem 0">
+      <div class="empty-state"><div class="empty-icon">⏳</div><p>Analyzing file...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Move File Modal -->
+<div class="modal-overlay hidden" id="move-modal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <h2>📂 Move File</h2>
+      <button class="modal-close" onclick="closeModal('move-modal')">✕</button>
+    </div>
+    <p style="color:var(--text-muted);margin-bottom:1rem;font-size:.9rem">Choose a destination folder:</p>
+    <select id="move-folder-select" class="full-width-input" style="padding:.7rem;border-radius:.5rem;background:var(--surface);color:var(--text);border:1px solid var(--border)">
+      <option value="">📁 Root (no folder)</option>
+    </select>
+    <button class="btn-primary full-width" style="margin-top:1rem" onclick="confirmMoveFile()">Move Here</button>
+  </div>
+</div>
+
+<!-- Download Selected ZIP Bar (shown at bottom when files are selected) -->
+<div id="zip-bar" class="undo-bar hidden" style="background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid var(--border)">
+  <span id="zip-bar-msg">0 files selected</span>
+  <button onclick="downloadSelectedZip()" class="btn-primary" style="padding:.4rem 1rem;font-size:.85rem">⬇ Download ZIP</button>
+  <button onclick="clearSelection()" class="undo-close">✕</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
